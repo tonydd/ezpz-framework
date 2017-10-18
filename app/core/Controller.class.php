@@ -224,17 +224,14 @@ class Controller
         return Controller::getInstance( Controller::$_currentCtlClass );
     }
 
-    public static function error($message, $level) {
-        if (true) {
-            // TODO conf
-            if ($level === E_USER_ERROR) {
-                die($message);
-            }
-            else {
-                echo '<pre>' . $message . '</pre>';
-            }
-        }
-        //trigger_error($message, $level);
+    public static function error($message)
+    {
+        die('<pre>'.$message.'</pre>');
+    }
+
+    public static function warn($message)
+    {
+        echo '<pre>' . $message . '</pre>';
     }
 
     /**

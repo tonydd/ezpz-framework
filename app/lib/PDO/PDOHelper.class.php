@@ -32,7 +32,7 @@ class PDOHelper
         try {
             $this->pdo = new PDO("mysql:host=$dbUrl;port=$dbPort;dbname=$dbName", $dbUser, $dbPasswd);
         } catch (Exception $e) {
-            trigger_error($e->__toString(), E_USER_ERROR);
+            Controller::error($e->__toString(), E_USER_ERROR);
         }
     }
 
@@ -82,7 +82,7 @@ class PDOHelper
 
         }
         catch (Exception $e) {
-            trigger_error($e->__toString(), E_USER_ERROR);
+            Controller::error($e->__toString(), E_USER_ERROR);
         }
 
         return $data;
@@ -108,7 +108,7 @@ class PDOHelper
 
         }
         catch (Exception $e) {
-            trigger_error($e->__toString(), E_USER_ERROR);
+            Controller::error($e->__toString(), E_USER_ERROR);
         }
 
         return true;
@@ -135,12 +135,13 @@ class PDOHelper
             }
 
             if (!($instance = $statement->fetch())) {
-                throw new Exception("Error retrieving statement data: " . var_export($statement->errorInfo(), true));
+                //throw new Exception("Error retrieving statement data: " . var_export($statement->errorInfo(), true));
+                Controller::warn("PDOHelper couldn't create instance from request $request");
             }
 
         }
         catch (Exception $e) {
-            trigger_error($e->__toString(), E_USER_ERROR);
+            Controller::error($e->__toString(), E_USER_ERROR);
         }
 
         return $instance;
@@ -172,7 +173,7 @@ class PDOHelper
 
         }
         catch (Exception $e) {
-            trigger_error($e->__toString(), E_USER_ERROR);
+            Controller::error($e->__toString(), E_USER_ERROR);
         }
 
         return $instances;
