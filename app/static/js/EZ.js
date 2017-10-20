@@ -37,12 +37,20 @@ EZ.prototype.getData = function(key)
  * @param parameters
  * @returns {string}
  */
-EZ.prototype.buildUrl = function (controller, action, parameters) {
+EZ.prototype.buildUrl = function (controller, action, parameters, doNotEncode) {
     var url = this.baseUrl + "?ctl=" + controller + "&action=" + action;
 
     parameters = parameters || null;
+    doNotEncode = doNotEncode || false;
     if (parameters !== null) {
-        url += "&"+this.encodedParamName+"=" + btoa(EZ.arrToPlain(parameters));
+        if (doNotEncode) {
+            for(var key in parameters) {
+                url += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(parameters[key]);
+            }
+        }
+        else {
+            url += "&"+this.encodedParamName+"=" + btoa(EZ.arrToPlain(parameters));
+        }
     }
 
     return url;
@@ -57,7 +65,10 @@ EZ.arrToPlain = function(arr)
 {
     var out = '';
     for (var key in arr) {
-        out += key + this.fDelimiter + JSON.stringify(arr[key]) + this.pDelimiter;
+        out += encodeURIComponent(key);
+        out += Ez.fDelimiter;
+        out += encodeURIComponent(JSON.stringify(arr[key]));
+        out += Ez.pDelimiter;
     }
 
     out =  out.slice(0, -1);

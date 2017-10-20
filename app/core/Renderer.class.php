@@ -171,12 +171,19 @@ class Renderer
      * @param $action
      * @return string
      */
-    public function buildUrl($controller, $action, $parameters = array())
+    public function buildUrl($controller, $action, $parameters = array(), $doEncode = true)
     {
         $url = Controller::getCurrentController()->getBaseUrl() . DIRECTORY_SEPARATOR . '?ctl=' . $controller . '&action=' . $action;
 
         if (!empty($parameters)) {
-            $url .= '&' . Controller::PARAM_ENCODED . '=' . $this->encodeParameters($parameters);
+            if ($doEncode) {
+                $url .= '&' . Controller::PARAM_ENCODED . '=' . $this->encodeParameters($parameters);
+            }
+            else {
+                foreach ($parameters as $key => $value) {
+                    $url .= '&' . urlencode($key) . '=' . urlencode($value);
+                }
+            }
         }
 
         return $url;

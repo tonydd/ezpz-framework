@@ -22,9 +22,6 @@ abstract class PDORequest
     /** @var PDORequestClause[] */
     protected $clauses = [];
 
-    /** @var array  */
-    protected $order = [];
-
     /** @var PDOHelper  */
     protected $pdoh;
 
@@ -51,6 +48,17 @@ abstract class PDORequest
     {
         $val = $this->pdoh->quote($val);
         return true;
+    }
+
+    /**
+     * @param PDORequestClause $clause
+     * @return $this
+     */
+    public function where(PDORequestClause $clause)
+    {
+        $this->clauses[] = $clause;
+
+        return $this;
     }
 
     /* STATIC */

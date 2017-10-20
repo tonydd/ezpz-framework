@@ -78,6 +78,24 @@ class Model
         }
     }
 
+    public function delete()
+    {
+        $methodPK = "get" . ucfirst(static::$_pk);
+        $pk = $this->$methodPK();
+
+        $req = DB::getInstance()->createDelete(Helper::fromCamelCase(get_called_class()));
+        $clause = PDORequest::clause()->where(static::$_pk, $pk);
+        $req->where($clause);
+
+        $result = $req->exec();
+
+        if ($result && static::$_fixture) {
+            Fixture::dumpFixture(get_called_class());
+        }
+
+        return $result;
+    }
+    
     /**
      * @return bool
      */
@@ -89,6 +107,10 @@ class Model
         } else {
             // -- mise a jour
             $this->_update();
+        }
+
+        if (static::$_fixture) {
+            Fixture::dumpFixture(get_called_class());
         }
     }
 
@@ -154,7 +176,7 @@ class Model
                     $value = $value->getId();
                 }
 
-                $html .= "<label for='$member'>$member : </label>";
+                $html .= "<label for='$member'>" . ucfirst($member) . " : </label>";
                 $html .= "<input class='form-control' id='$member' name='$member' type='text' value='$value' />";
                 $html .= "</div>";
             }
@@ -221,7 +243,7 @@ class Model
      * @param bool $forceDbQuery
      * @return Model
      */
-    public static function load($queryVal, $forceDbQuery = false)
+    public static function load($queryVal)
     {
         /** @var Model $className */
         $className = get_called_class();
@@ -230,7 +252,7 @@ class Model
         $cache = Factory::getCache();
         $key = $className . '-' . $queryVal;
 
-        if ($className::$_fixture && !$forceDbQuery) {
+        if ($className::$_fixture) {
             return Fixture::loadAsFixture($className, $queryVal);
         }
 
@@ -253,11 +275,11 @@ class Model
      * @param bool $forceDbQuery
      * @return Model[]
      */
-    public static function loadAll($forceDbQuery = false)
+    public static function loadAll()
     {
         $className = get_called_class();
 
-        if ($className::$_fixture && !$forceDbQuery) {
+        if ($className::$_fixture) {
             return Fixture::loadAllAsFixture($className);
         }
 

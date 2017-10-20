@@ -8,6 +8,9 @@
 
 class PDORequestSelect extends PDORequest
 {
+    /** @var array  */
+    protected $order = [];
+
     public function select($cols = PDORequest::ALL_COLUMNS)
     {
         $this->columns = $cols;
@@ -25,17 +28,6 @@ class PDORequestSelect extends PDORequest
     public function join($table)
     {
 
-    }
-
-    /**
-     * @param PDORequestClause $clause
-     * @return $this
-     */
-    public function where(PDORequestClause $clause)
-    {
-        $this->clauses[] = $clause;
-
-        return $this;
     }
 
 

@@ -36,7 +36,7 @@ class Controller
     const PARAM_FIELD_DELIMITER = '#';
 
     /** @var string */
-    const PARAM_ENCODED = 'data';
+    const PARAM_ENCODED = 'ep';
 
     /**
      * Controller constructor.
@@ -175,7 +175,7 @@ class Controller
 
             foreach (explode(Controller::PARAM_DELIMITER, $rawData) as $component) {
                 list($name, $value) = explode(Controller::PARAM_FIELD_DELIMITER, $component);
-                $dataArray[$name] = json_decode($value, true);
+                $dataArray[$name] = json_decode(urldecode($value), true);
             }
 
             unset(Controller::$_parameters[Controller::PARAM_ENCODED]);
@@ -204,7 +204,7 @@ class Controller
     private static function cleanParamArr(&$val, $index)
     {
         if ($index !== Controller::PARAM_ENCODED) {
-            $val = htmlentities($val);
+            $val = urldecode($val);
         }
     }
 

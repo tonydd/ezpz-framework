@@ -55,6 +55,13 @@ class PDOHelper
         return $q;
     }
 
+    public function createDelete($table)
+    {
+        $q = new PDORequestDelete();
+        $q->from($table);
+        return $q;
+    }
+
     /**
      * @param $request
      * @param $parameters

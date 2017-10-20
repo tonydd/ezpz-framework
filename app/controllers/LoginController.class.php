@@ -44,6 +44,12 @@ class LoginController extends Controller
         return false;
     }
 
+    public function isAdmin()
+    {
+        $usr = $this->getCurrentUser();
+        return (int)$usr->getAdmin() === 1;
+    }
+
     public function getNom()
     {
         return $this->currentUser->getNom() ?? 'UNKNOWN';

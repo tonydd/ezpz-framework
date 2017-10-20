@@ -68,12 +68,24 @@ class Fixture
         if (!self::getCache()->hasValue($key)) {
             $data = array();
 
-            $instances = $className::loadAll(true);
+            $instances = PDOHelper::getInstance()
+                ->createSelect()
+                ->from(Helper::toCamelCase($className))
+                ->find();
+
             foreach ($instances as $instance) {
                 $data[$instance->getId()] = $instance;
             }
 
             self::getCache()->setValue($key, $data);
+        }
+    }
+
+    public static function dumpFixture($className)
+    {
+        $key = 'fixture-'.$className;
+        if (self::getCache()->hasValue($key)) {
+            self::getCache()->clearValue($key);
         }
     }
 }
