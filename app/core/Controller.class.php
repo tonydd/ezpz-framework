@@ -56,6 +56,17 @@ class Controller
     }
 
     /**
+     * Get a single request parameter
+     * @param string $name
+     * @return mixed|null
+     */
+    public function getParameter(string $name)
+    {
+        $parameters = $this->getParameters();
+        return $parameters[$name] ?? null;
+    }
+
+    /**
      * @return Renderer
      */
     public function getRenderer()
@@ -87,6 +98,14 @@ class Controller
     }
 
     /**
+     *
+     */
+    public function getRequestedUrl()
+    {
+        return (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    }
+    
+    /**
      * @param string $controller
      * @param string $action
      * @param array $parameters
@@ -95,7 +114,7 @@ class Controller
     {
         //Controller::process(ucfirst($controller).'Controller', $action, $parameters);
         $targetUrl = $this->getRenderer()->buildUrl($controller, $action, $parameters);
-        header("Location: $targetUrl");
+        $this->redirectUrl($targetUrl);
     }
 
     /**
@@ -104,7 +123,15 @@ class Controller
     public function redirectHome()
     {
         $targetUrl = $this->getBaseUrl();
-        header("Location: $targetUrl");
+        $this->redirectUrl($targetUrl);
+    }
+
+    /**
+     *
+     */
+    public function redirectUrl($url)
+    {
+        $this->setheader('Location', $url);
     }
 
     /**
@@ -226,12 +253,15 @@ class Controller
 
     public static function error($message)
     {
-        die('<pre>'.$message.'</pre>');
+        die('<h1>ERROR</h1><pre>'.$message.'</pre>');
     }
 
     public static function warn($message)
     {
-        echo '<pre>' . $message . '</pre>';
+        //echo '<pre>' . $message . '</pre>';
+        Controller::getCurrentController()
+            ->getRenderer()
+            ->addMessage('<pre>' . $message . '</pre>', Renderer::WARN_MESSAGE);
     }
 
     /**

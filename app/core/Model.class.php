@@ -183,7 +183,7 @@ class Model
 
             if (!Helper::stringStartsWith($member, '_') && $member === $class::$_pk) {
                 if (($pkVal = $this->getId()) !== null) {
-                    $html .= "<input type='hidden' name='$member' id='$member' value='$pkVal' />'";
+                    $html .= "<input type='hidden' name='$member' id='$member' value='$pkVal' />";
                 }
             }
         }

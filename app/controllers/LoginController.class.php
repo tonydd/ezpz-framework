@@ -60,14 +60,14 @@ class LoginController extends Controller
         $this->getRenderer()
             ->setTitle("Se connecter")
             ->setTemplate('form_login')
+            ->assign('url', $this->getParameter('url'))
             ->render();
     }
 
     public function loginAction()
     {
-        $parameters = $this->getParameters();
-        $mail  = htmlentities($parameters['mail']);
-        $pwd    = htmlentities($parameters['pwd']);
+        $mail   = $this->getParameter('mail');
+        $pwd    = $this->getParameter('pwd');
 
         if (($user = User::getLoginUser($mail, $pwd)) === null) {
             $this->getRenderer()->addMessage("Vos informations de connexion sont incorrectes !", Renderer::ERR_MESSAGE);
@@ -78,7 +78,13 @@ class LoginController extends Controller
         SessionHelper::setValue('currentUser', $user);
         $this->setCurrentUser($user);
         $this->getRenderer()->addMessage("Vous êtes maintenant connecté(e) !", Renderer::SUCCESS_MESSAGE);
-        $this->redirectHome();
+
+        if (($url = $this->getParameter('url')) !== null) {
+            $this->redirectUrl($url);
+        }
+        else {
+            $this->redirectHome();
+        }
     }
 
     public function logoutAction()
@@ -86,5 +92,26 @@ class LoginController extends Controller
         $this->unsetCurrentUser();
         $this->getRenderer()->addMessage("Vous avez été déconnecté(e)", Renderer::INFO_MESSAGE);
         $this->redirect('index');
+    }
+
+    public function accountAction()
+    {
+        if (!$this->isLogged()) {
+            $this->getRenderer()
+                ->addMessage("Vous devez être connecté pour voir cette page.<br/>Connectez-vous pour être redirigé sur la page souhaitée.",
+                    Renderer::WARN_MESSAGE);
+
+            $this->redirect('login', 'loginForm', [
+                'url'   => $this->getRequestedUrl()
+            ]);
+
+            return;
+        }
+
+        $this->getRenderer()
+            ->setTitle("Mes infos")
+            ->setTemplate('account')
+            ->assign('user', $this->getCurrentUser())
+            ->render();
     }
 }

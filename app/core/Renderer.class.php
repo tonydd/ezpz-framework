@@ -125,11 +125,16 @@ class Renderer
      */
     public function setTemplate($template)
     {
-        if (!($path = $this->findView($template))) {
-            throw new InvalidArgumentException("Template $template could not be found.");
-        }
-        else {
-            $this->template = $template;
+        try {
+            if (!($path = $this->findView($template))) {
+                throw new InvalidArgumentException("Template $template could not be found.");
+            } else {
+                $this->template = $template;
+            }
+        } catch (InvalidArgumentException $e) {
+            Controller::error("View file for $template has not been found ...");
+        } catch (Exception $e) {
+            Controller::error($e->__toString());
         }
 
         return $this;
@@ -166,23 +171,26 @@ class Renderer
         return Controller::getCurrentController()->getBaseUrl();
     }
 
+
     /**
      * @param $controller
      * @param $action
+     * @param array $parameters
+     * @param bool $doNotEncode
      * @return string
      */
-    public function buildUrl($controller, $action, $parameters = array(), $doEncode = true)
+    public function buildUrl($controller, $action, $parameters = array(), $doNotEncode = false)
     {
         $url = Controller::getCurrentController()->getBaseUrl() . DIRECTORY_SEPARATOR . '?ctl=' . $controller . '&action=' . $action;
 
         if (!empty($parameters)) {
-            if ($doEncode) {
-                $url .= '&' . Controller::PARAM_ENCODED . '=' . $this->encodeParameters($parameters);
-            }
-            else {
+            if ($doNotEncode) {
                 foreach ($parameters as $key => $value) {
                     $url .= '&' . urlencode($key) . '=' . urlencode($value);
                 }
+            }
+            else {
+                $url .= '&' . Controller::PARAM_ENCODED . '=' . $this->encodeParameters($parameters);
             }
         }
 
@@ -198,7 +206,7 @@ class Renderer
         $raw = '';
 
         foreach ($params as $key => $value) {
-            $raw .= $key . Controller::PARAM_FIELD_DELIMITER . json_encode($value) . Controller::PARAM_DELIMITER;
+            $raw .= $key . Controller::PARAM_FIELD_DELIMITER . urlencode(json_encode($value)) . Controller::PARAM_DELIMITER;
         }
 
         $encoded = base64_encode(rtrim($raw, Controller::PARAM_DELIMITER));
@@ -472,15 +480,21 @@ class Renderer
      */
     private function _include($view, $passData = false)
     {
-        if (!($path = $this->findView($view))) {
-            throw new InvalidArgumentException("View $view could not be found.");
-        }
-
-        if (file_exists($path)) {
-            if ($passData) {
-                $data = $this->parameters;
+        try {
+            if (!($path = $this->findView($view))) {
+                throw new InvalidArgumentException("View $view could not be found.");
             }
-            include $path;
+
+            if (file_exists($path)) {
+                if ($passData) {
+                    $data = $this->parameters;
+                }
+                include $path;
+            }
+        } catch (InvalidArgumentException $e) {
+            Controller::error("View file for $view has not been found ...");
+        } catch (Exception $e) {
+            Controller::error($e->__toString());
         }
     }
 }
