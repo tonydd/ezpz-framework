@@ -11,6 +11,7 @@ class Paginator
 
     protected $class;
     protected $pageSize;
+    protected $offset;
 
     private $sessKey;
 
@@ -18,7 +19,7 @@ class Paginator
 
     const NEXT      = 'next';
     const PREV      = 'prev';
-    const PARAM     = 'pdirection';
+    const PARAM     = 'offset';
     
 
     public function __construct(string $class)
@@ -39,102 +40,98 @@ class Paginator
         $this->pageSize = $ps;
     }
 
-    public function setPage($page)
+    public function getPagesize()
     {
-        $this->setOffset($this->pageSize * $page);
+        return $this->pageSize;
     }
 
-    private function getOffset()
+    public function getOffset()
     {
-        return SessionHelper::getValue($this->sessKey) ?? 0;
-    }
-
-    private function setOffset($offset)
-    {
-        SessionHelper::setValue($this->sessKey, $offset);
-    }
-
-    public function resetOffset()
-    {
-        $this->setOffset(0);
+        return $this->offset;
     }
 
     public function fetch()
     {
-        $db = PDOHelper::getInstance();
-        $offset = $this->getOffset();
-        $req = $db->createSelect()
-            ->from(Helper::fromCamelCase($this->class))
-            ->setLimit($this->pageSize)
-            ->setOffset($offset);
-
-        if ($data = $req->find()) {
-            return $data;
-        }
-
-        return false;
+        $ctl = Controller::getCurrentController();
+        $offset = (int)$ctl->getParameter(self::PARAM) ?? 0;
+        $this->offset = $offset;
+        return $this->fetchSql();
     }
 
-    public function fetchNext()
+    public function fetchSql()
     {
         $db = PDOHelper::getInstance();
-        $offset = $this->getOffset();
         $req = $db->createSelect()
             ->from(Helper::fromCamelCase($this->class))
             ->setLimit($this->pageSize)
-            ->setOffset($offset);
+            ->setOffset($this->offset);
 
         if ($data = $req->find()) {
-            $this->setOffset($offset + $this->pageSize);
             return $data;
         }
         else {
-            $this->resetOffset();
             return false;
         }
     }
 
-    public function fetchPrevious()
+    public function getInfos()
     {
-        $db = PDOHelper::getInstance();
-        $offset = $this->getOffset();
+        $cnt = $this->getCount();
+        $res = $this->pageSize;
+        $page = ($this->getOffset() / $res)+1;
 
-        if ($offset > 0) {
-            $offset = $offset - $this->pageSize;
-        }
-
-        $req = $db->createSelect()
-            ->from(Helper::fromCamelCase($this->class))
-            ->setLimit($this->pageSize)
-            ->setOffset($offset);
-
-        if ($data = $req->find()) {
-            $this->setOffset($offset);
-            return $data;
-        }
-        else {
-            $this->resetOffset();
-            return false;
-        }
+        $html = "<div class='well'>
+                Page $page
+                <br/>
+                Affichage de $res résultats sur $cnt au total.
+                </div>";
+        return $html;
     }
-
+    
     public function getControls()
     {
         $html = '<div class="row">';
+        $html .= '<form method="POST" action="' . Controller::getCurrentController()->getRequestedUrl() .'">';
+
+        $btnName = self::PARAM;
+        $currentOffset = $this->offset;
+        $count = $this->getCount();
 
         // Aller au début
-        $html .= '<div class="col-lg-2">DEB</div>';
+
+        $html .= "<div class='col-lg-2'>";
+        if ($currentOffset > 0) {
+            $html .= "<button class='btn btn-danger' name='$btnName' type='submit' value='0'><<</button>";
+        }
+        $html .= "</div>";
+
         // Prev
-        $html .= '<div class="col-lg-2">PREV</div>';
+        $prevOffset = $currentOffset - $this->pageSize;
+        $html .= "<div class='col-lg-2'>";
+        if ($currentOffset > 0) {
+            $html .= "<button class='btn btn-default' name='$btnName' type='submit' value='$prevOffset'><</button>";
+        }
+        $html .= "</div>";
 
         // Millieu
         $html .= '<div class="col-lg-4"></div>';
+        // TODO générer les pages (content)
 
         // Next
-        $html .= '<div class="col-lg-2">NEXT</div>';
+        $nextOffset = $currentOffset + $this->pageSize;
+        $html .= "<div class='col-lg-2'>";
+        if ($nextOffset < $count) {
+            $html .= "<button class='btn btn-default' name='$btnName' type='submit' value='$nextOffset'>></button>";
+        }
+        $html .= "</div>";
 
         // LAST
-        $html .= '<div class="col-lg-2">END</div>';
+        $lastOffset = $count - $this->pageSize;
+        $html .= "<div class='col-lg-2'>";
+        if ($nextOffset < $count) {
+            $html .= "<button class='btn btn-primary' name='$btnName' type='submit' value='$lastOffset'>>></button>";
+        }
+        $html .= "</div>";
 
         $html .= '</div>'; // End row
 
