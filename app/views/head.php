@@ -21,4 +21,8 @@
 
 <div class="container">
 
-<?php $this->_include('messages');?>
+<?php
+    $this->_include('messages');
+
+    // -- Then here will be included the template associated to the renderer
+?>

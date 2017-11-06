@@ -49,6 +49,8 @@ class Renderer
     }
 
     /**
+     * Will display a message into the message zone
+     * Messages are store in session, as a result messages are shared by all renderers
      * @param $message
      * @param $type
      * @return Renderer
@@ -68,6 +70,7 @@ class Renderer
     }
 
     /**
+     * Returns true if there are messages to display
      * @return bool
      */
     public function hasMessages()
@@ -76,6 +79,7 @@ class Renderer
     }
 
     /**
+     * Returns all messages and destroys them
      * @return array|null
      */
     public function popMessages()
@@ -86,6 +90,7 @@ class Renderer
     }
 
     /**
+     * Assign a variable to pass to the template
      * @param string $name : Variable name
      * @param mixed $value : Value for name
      * @return Renderer $this
@@ -103,6 +108,7 @@ class Renderer
     }
 
     /**
+     * Assign a variable which will be converted to JSON and passed to the Javascript
      * @param $name
      * @param $value
      * @return $this
@@ -120,6 +126,7 @@ class Renderer
     }
 
     /**
+     * Set template to be used
      * @param string $template : Template name
      * @return Renderer $this
      */
@@ -141,6 +148,7 @@ class Renderer
     }
 
     /**
+     * Get current renderer template
      * @return string
      */
     public function getTemplate()
@@ -149,6 +157,7 @@ class Renderer
     }
 
     /**
+     * Set page title
      * @param string $title
      * @return Renderer $this
      */
@@ -159,6 +168,7 @@ class Renderer
     }
 
     /**
+     * Get page title
      * @return string
      */
     public function getTitle()
@@ -166,6 +176,10 @@ class Renderer
         return $this->title;
     }
 
+    /**
+     * Shortcut to get homepage URL
+     * @return string
+     */
     public function homepage()
     {
         return Controller::getCurrentController()->getBaseUrl();
@@ -173,48 +187,20 @@ class Renderer
 
 
     /**
+     * Shortcut to URL builder, accessible from views
      * @param $controller
      * @param $action
      * @param array $parameters
      * @param bool $doNotEncode
      * @return string
      */
-    public function buildUrl($controller, $action, $parameters = array(), $doNotEncode = false)
+    public function buildUrl($controller, $action, $parameters = [], $doNotEncode = false)
     {
-        $url = Controller::getCurrentController()->getBaseUrl() . DIRECTORY_SEPARATOR . '?ctl=' . $controller . '&action=' . $action;
-
-        if (!empty($parameters)) {
-            if ($doNotEncode) {
-                foreach ($parameters as $key => $value) {
-                    $url .= '&' . urlencode($key) . '=' . urlencode($value);
-                }
-            }
-            else {
-                $url .= '&' . Controller::PARAM_ENCODED . '=' . $this->encodeParameters($parameters);
-            }
-        }
-
-        return $url;
+        return Url::build($controller, $action, $parameters, $doNotEncode = false);
     }
 
     /**
-     * @param $params
-     * @return string
-     */
-    private function encodeParameters($params)
-    {
-        $raw = '';
-
-        foreach ($params as $key => $value) {
-            $raw .= $key . Controller::PARAM_FIELD_DELIMITER . urlencode(json_encode($value)) . Controller::PARAM_DELIMITER;
-        }
-
-        $encoded = base64_encode(rtrim($raw, Controller::PARAM_DELIMITER));
-
-        return $encoded;
-    }
-
-    /**
+     * Returns core JS with core variables binding
      * @return bool|string
      */
     public function getCoreJS()
@@ -222,32 +208,49 @@ class Renderer
         $coreJSFile     = Renderer::DEFAULT_JS_PATH . DIRECTORY_SEPARATOR . 'EZ.js';
         $coreJS         = file_get_contents($coreJSFile);
 
-        // -- Init base vars
-        $coreJS = str_replace(
-            [
-                '%baseUrl%',
-                '%pDelimiter%',
-                '%fDelimiter%',
-                '%encodedParamName%'
-            ],
-            [
-                Controller::getCurrentController()->getBaseUrl(),
-                Controller::PARAM_DELIMITER,
-                Controller::PARAM_FIELD_DELIMITER,
-                Controller::PARAM_ENCODED
-            ],
-            $coreJS
-        );
+        $this->bindCoreJSVars($coreJS);
 
         return $coreJS;
     }
 
+    /**
+     * Bind core JS variables
+     * @param $coreJS
+     */
+    private function bindCoreJSVars(&$coreJS)
+    {
+
+        $baseUrl        = Controller::getCurrentController()->getBaseUrl();
+        $serviceWorker  = 'EZServiceWorker.js';
+
+        $binding = [
+            '%baseUrl%'             => $baseUrl,
+            '%pDelimiter%'          => Controller::PARAM_DELIMITER,
+            '%fDelimiter%'          => Controller::PARAM_FIELD_DELIMITER,
+            '%encodedParamName%'    => Controller::PARAM_ENCODED,
+            '%workerUrl%'           => $serviceWorker
+        ];
+
+
+        // -- Init base vars
+        $coreJS = str_replace(
+            array_keys($binding),
+            array_values($binding),
+            $coreJS
+        );
+    }
+
+    /**
+     * Returns EZ Core JS Url (static controller)
+     * @return string
+     */
     public function getCoreJSUrl()
     {
         return $this->buildUrl('static', 'coreJs');
     }
 
     /**
+     * Get project Javascript code
      * @return mixed|null|string
      */
     public function getJs()
@@ -261,8 +264,7 @@ class Renderer
         $js = $this->getRawJS();
 
         if(!Controller::isDevMode()) {
-            $minifier = Factory::getMinifier();
-            $js = $minifier->exec($js, 'js');
+            $js = Factory::getMinifier()->minifyJS($js);
             $cache->setValue('site_js', $js, CacheInterface::TTL_INFINITY);
         }
 
@@ -270,6 +272,7 @@ class Renderer
     }
     
     /**
+     * Fetch all JS project files and assemble them in a PHP var, then returns it
      * @return string
      */
     public function getRawJS()
@@ -293,6 +296,7 @@ class Renderer
     }
 
     /**
+     * Returns URL to get JavaScript Project code from Frontoffice
      * @return string
      */
     public function getJSUrl()
@@ -301,7 +305,8 @@ class Renderer
     }
 
     /**
-     * @return string
+     * Get project CSS code
+     * @return mixed|null|string
      */
     public function getCSS()
     {
@@ -314,14 +319,17 @@ class Renderer
         $finalCSS = $this->getRawCss();
 
         if(!Controller::isDevMode()) {
-            $minifier = Factory::getMinifier();
-            $finalCSS = $minifier->exec($finalCSS, 'css');
+            $finalCSS = Factory::getMinifier()->minifyCSS($finalCSS);
             $cache->setValue('site_css', $finalCSS, CacheInterface::TTL_INFINITY);
         }
 
         return $finalCSS;
     }
 
+    /**
+     * Fetch all CSS project files and assemble them in a PHP var, then returns it
+     * @return string
+     */
     public function getRawCss()
     {
         $finalCSS = '';
@@ -343,6 +351,7 @@ class Renderer
     }
 
     /**
+     * Returns URL to get JavaScript Project code from Frontoffice
      * @return string
      */
     public function getCSSUrl()
@@ -351,7 +360,7 @@ class Renderer
     }
 
     /**
-     *
+     * Final rendering step : builds the page and displays it by including necessary files
      */
     public function render()
     {
@@ -369,6 +378,7 @@ class Renderer
      * Private internal functions
      */
     /**
+     * Returns a list of all JS project files
      * @param null $directory
      * @return array
      */
@@ -398,6 +408,7 @@ class Renderer
     }
 
     /**
+     * Returns a list of all CSS project files
      * @param $directory
      * @return array
      */
@@ -426,6 +437,7 @@ class Renderer
 
 
     /**
+     * Check if a view exists in project
      * @param $name
      * @param null $directory
      * @return bool|string
@@ -436,10 +448,20 @@ class Renderer
             return $this->_views[$name];
         }
 
-        if ($directory === null) {
-            $directoryFirst = ROOTPATH . '/code/views';
-            $directorySecond = ROOTPATH . '/app/views';
+        $directoryFirst = ROOTPATH . '/code/views';
+        $directorySecond = ROOTPATH . '/app/views';
+        $fs = Controller::getFS();
 
+        // -- A folder has been specified, $name is a path
+        if (Helper::stringContains($name, $fs::SEP)) {
+            $subDirname         = dirname($name);
+            $name               = basename($name);
+
+            $directoryFirst     .= $fs::SEP . $subDirname;
+            $directorySecond    .= $fs::SEP . $subDirname;
+        }
+
+        if ($directory === null) {
             if (($path = $this->findView($name, $directoryFirst))) {
                 return $path;
             }
@@ -453,19 +475,35 @@ class Renderer
         else {
             $needle = $name . '.php';
 
-            if (is_dir($directory)) {
-                $scan = scandir($directory);
-                unset($scan[0], $scan[1]); //unset . and ..
+            $files = [];
+            $dirs = [];
+
+            // -- Scan dir and separate files from directories
+            if ($fs->is_dir($directory)) {
+                $scan = $fs->scandir($directory);
+
                 foreach ($scan as $file) {
-                    if (is_dir($directory . DIRECTORY_SEPARATOR . $file)) {
-                        if (($path = $this->findView($name, $directory . DIRECTORY_SEPARATOR . $file))) {
-                            return $path;
-                        }
+                    $thePath = $directory . $fs::SEP . $file;
+
+                    if ($fs->is_dir($thePath)) {
+                        $dirs[]     = $thePath;
                     } else {
-                        if ($file === $needle) {
-                            $this->_views[$name] = $directory . DIRECTORY_SEPARATOR . $file;
-                            return $this->_views[$name];
-                        }
+                        $files[]    = $thePath;
+                    }
+                }
+
+                // -- Scan files first
+                foreach ($files as $file) {
+                    if (basename($file) === $needle) {
+                        $this->_views[$name] = $file;
+                        return $this->_views[$name];
+                    }
+                }
+
+                // -- Scan sub directories then
+                foreach ($dirs as $dir) {
+                    if (($path = $this->findView($name, $dir))) {
+                        return $path;
                     }
                 }
             }
@@ -476,7 +514,8 @@ class Renderer
     }
 
     /**
-     * @param string$view
+     * Include a (sub)view
+     * @param string $view
      */
     private function _include($view, $passData = false)
     {

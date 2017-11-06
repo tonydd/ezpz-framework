@@ -5,37 +5,16 @@
  * Date: 14/10/17
  * Time: 16:43
  */
-class Minify {
+class Minify implements Minifier {
 
     protected $source;
     protected $type;
 
     /**
-     * exec
-     * Does the minification process
-     */
-    public function exec($content, $type) {
-
-        $this->source = $content;
-        $this->type = $type;
-
-        switch($this->type) {
-            case 'css':
-                return $this->minifyCSS();
-                break;
-            case 'js':
-                return $this->minifyJS();
-                break;
-        }
-
-        return '';
-    }
-
-    /**
      * minifyCSS
      * Sets the minified data for CSS
      */
-    private function minifyCSS() {
+    public function minifyCSS($source) {
         return $this->strip_whitespaces($this->strip_linebreaks($this->strip_comments($this->source)));
     }
 
@@ -43,7 +22,7 @@ class Minify {
      * minifyJS
      * Sets the minified data for JavaScript
      */
-    private function minifyJS() {
+    public function minifyJS($source) {
         return $this->superfixmyjs($this->strip_whitespaces($this->strip_linebreaks($this->strip_comments($this->source)))); // TODO
     }
 

@@ -57,7 +57,7 @@ class Model
                 if (in_array($property, array_keys($class::$_relations))) {
 
                     // -- If so, check if it has been loaded already
-                    if (!in_array($property, $this->_relationsLoaded)) {
+                    if (!in_array($property, $this->_relationsLoaded) && !$this->{$property} instanceof Model) {
                         $this->loadRelation($property, $class::$_relations[$property]);
                     }
 
@@ -120,7 +120,7 @@ class Model
         $class = get_class($this);
 
         $db = DB::getInstance();
-        $req = $db->createInsert($class);
+        $req = $db->createInsert(Helper::fromCamelCase($class));
 
         $columns = array();
         $values = array();
@@ -147,7 +147,12 @@ class Model
 
         $req->insertCols($columns)->insertRow($values);
 
-        return $req->exec();
+        $status = $req->exec();
+        if ($status) {
+            $method = "set" . ucfirst(Helper::toCamelCase($class::$_pk));
+            $this->$method($req->getInsertedId());
+        }
+        return $status;
     }
 
     private function _update()

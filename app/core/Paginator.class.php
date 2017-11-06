@@ -8,17 +8,20 @@
 
 class Paginator
 {
-
+    /** @var  string */
     protected $class;
+    /** @var  int */
     protected $pageSize;
+    /** @var  int */
     protected $offset;
+    /** @var  PDORequest */
+    protected $request;
 
+    /** @var string */
     private $sessKey;
 
     const DEFAULT_PAGESIZE = 10;
 
-    const NEXT      = 'next';
-    const PREV      = 'prev';
     const PARAM     = 'offset';
     
 
@@ -27,7 +30,6 @@ class Paginator
         $this->setClass($class);
         $this->setPagesize(self::DEFAULT_PAGESIZE);
         $this->sessKey = "paginator-$class";
-        $this->getCount();
     }
 
     protected function setClass($class)
@@ -50,6 +52,11 @@ class Paginator
         return $this->offset;
     }
 
+    public function setRequest(PDORequest $request)
+    {
+        $this->request = $request;
+    }
+
     public function fetch()
     {
         $ctl = Controller::getCurrentController();
@@ -60,13 +67,27 @@ class Paginator
 
     public function fetchSql()
     {
-        $db = PDOHelper::getInstance();
-        $req = $db->createSelect()
-            ->from(Helper::fromCamelCase($this->class))
-            ->setLimit($this->pageSize)
+        if ($this->request === null) {
+            $db = PDOHelper::getInstance();
+            $req = $db->createSelect()
+                ->from(Helper::fromCamelCase($this->class));
+        }
+        else {
+            $req = $this->request;
+        }
+
+        $req->setLimit($this->pageSize)
             ->setOffset($this->offset);
 
+        // -- Paginator cache
+//        $hash = md5($req->toQueryString());
+//        $cache = Factory::getCache();
+//        if ($cache->hasValue($hash)) {
+//            return $cache->getValue($hash);
+//        }
+
         if ($data = $req->find()) {
+            //$cache->setValue($hash, $data);
             return $data;
         }
         else {
@@ -83,7 +104,7 @@ class Paginator
         $html = "<div class='well'>
                 Page $page
                 <br/>
-                Affichage de $res résultats sur $cnt au total.
+                Affichage des résultats $this->offset à ".($this->offset + $this->pageSize)." sur $cnt au total.
                 </div>";
         return $html;
     }
@@ -142,10 +163,16 @@ class Paginator
     public function getCount()
     {
         if ($this->count === null) {
-            $this->count = PDOHelper::getInstance()
-                ->createSelect()
-                ->from(Helper::fromCamelCase($this->class))
-                ->count();
+            if ($this->request === null) {
+                $req = PDOHelper::getInstance()
+                    ->createSelect()
+                    ->from(Helper::fromCamelCase($this->class));
+            }
+            else {
+                $req = $this->request;
+            }
+
+            $this->count = $req->count();
         }
 
         return $this->count;

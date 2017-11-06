@@ -186,6 +186,11 @@ class PDOHelper
         return $instances;
     }
 
+    public function lastInsertedId()
+    {
+        return $this->pdo->lastInsertId();
+    }
+
     /**
      * @param $str
      * @return string

@@ -66,4 +66,9 @@ class PDORequestInsert extends PDORequest
     {
         return $this->pdoh->exec($this->toQueryString());
     }
+
+    public function getInsertedId()
+    {
+        return $this->pdoh->lastInsertedId();
+    }
 }

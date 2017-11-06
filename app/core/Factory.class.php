@@ -8,6 +8,9 @@
 
 class Factory
 {
+    /**
+     * @return Renderer
+     */
     public static function getRenderer()
     {
         $class = Conf::getValue('rewrite/renderer') ?? 'Renderer';
@@ -23,9 +26,24 @@ class Factory
         return new $class();
     }
 
+    /**
+     * @return Minifier
+     */
     public static function getMinifier()
     {
         $class = Conf::getValue('rewrite/minifier') ?? 'Minify';
         return new $class();
+    }
+
+    /**
+     * @return FS
+     */
+    public static function getFS()
+    {
+        if ((int)Conf::getValue('app/cachedFS') === 1) {
+            return new CachedFileSystem();
+        }
+
+        return new DefaultFileSystem();
     }
 }

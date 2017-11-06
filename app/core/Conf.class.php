@@ -24,9 +24,6 @@ class Conf
         self::$_conf = parse_ini_file($path, true);
     }
 
-    /**
-     *
-     */
     public static function getValue($xPath)
     {
         if (!self::isLoaded()) {

@@ -1,5 +1,5 @@
 /**
- *
+ * EZ class to provide Framework functions
  * @constructor
  */
 function EZ() {
@@ -9,6 +9,11 @@ function EZ() {
     this.fDelimiter = '%fDelimiter%';
     this.encodedParamName = '%encodedParamName%';
 }
+
+/**
+ * Global static variables
+ */
+EZ.workerUrl = '%workerUrl%';
 
 /**
  *
@@ -80,3 +85,21 @@ EZ.arrToPlain = function(arr)
  * @type {EZ}
  */
 Ez = new EZ();
+
+/****************************************
+ * Service worker instantiation
+ ****************************************/
+
+/*
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(EZ.workerUrl, {scope: Ez.baseUrl}).then(function(reg) {
+        // registration worked
+        console.log('Registration succeeded. Scope is ' + reg.scope);
+    }).catch(function(error) {
+        // registration failed
+        console.log('Registration failed with ' + error);
+    });
+} else {
+    alert('Ça va pas être possible')
+}
+*/

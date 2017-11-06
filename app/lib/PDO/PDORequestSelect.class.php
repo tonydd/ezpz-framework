@@ -110,6 +110,11 @@ class PDORequestSelect extends PDORequest
         return $this->pdoh->findInstance(ucfirst(Helper::toCamelCase($this->tableName)), $this->toQueryString());
     }
 
+    public function findAssoc()
+    {
+        return $this->pdoh->fetch($this->toQueryString());
+    }
+
     public function count()
     {
         $find = $this->pdoh->fetch($this->toQueryString(true));

@@ -45,4 +45,24 @@ class StaticController extends Controller
             ->setTemplate('404')
             ->render();
     }
+
+    /**
+     *
+     */
+    public function registerWorkerAction()
+    {
+        $this->setheader('Content-Type', 'application/json');
+
+        Factory::getCache()->setValue('worker_register', 1);
+
+        echo json_encode('OK');
+    }
+
+    /**
+     * An action for testing purpose
+     */
+    public function testAction()
+    {
+        $this->getRenderer()->setTemplate('recettes/index');
+    }
 }

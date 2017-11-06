@@ -26,7 +26,7 @@ class LoginController extends Controller
 
     public function getCurrentUser()
     {
-        return $this->currentUser;
+        return $this->currentUser ?? new User();
     }
 
     public function unsetCurrentUser()

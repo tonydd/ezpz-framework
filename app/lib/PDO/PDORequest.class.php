@@ -51,6 +51,14 @@ abstract class PDORequest
     }
 
     /**
+     * @return PDORequestClause
+     */
+    public function createClause()
+    {
+        return new PDORequestClause();
+    }
+
+    /**
      * @param PDORequestClause $clause
      * @return $this
      */
@@ -62,8 +70,12 @@ abstract class PDORequest
     }
 
     /* STATIC */
+    /**
+     * @return PDORequestClause
+     */
     public static function clause()
     {
-        return new PDORequestClause();
+        $dummyReq = new PDORequestInsert();
+        return $dummyReq->createClause();
     }
 }

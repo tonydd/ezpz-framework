@@ -17,6 +17,9 @@ class Controller
     /** @var  string */
     private static $_currentCtlClass;
 
+    /** @var  FS */
+    private static $_fileSystemReflection;
+
     /** @var  string */
     private static $_defaultCtl;
 
@@ -82,7 +85,7 @@ class Controller
         if ($this->_baseUrl === null) {
             $this->_baseUrl = sprintf(
                 "%s://%s",
-                isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
+                Conf::getValue('app/protocol') ?? 'http',
                 Conf::getValue('app/baseUrl')
             );
         }
@@ -102,7 +105,8 @@ class Controller
      */
     public function getRequestedUrl()
     {
-        return (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+        return (Conf::getValue('app/protocol') ?? 'http')
+            . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
     }
     
     /**
@@ -132,6 +136,23 @@ class Controller
     public function redirectUrl($url)
     {
         $this->setheader('Location', $url);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function _beforeAction()
+    {
+        $this->_beforeAction = true;
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function _afterAction()
+    {
+        return true;
     }
 
     /**
@@ -167,6 +188,7 @@ class Controller
     public static function process($paramCtrl = null, $paramAction = null, $paramParameters = null)
     {
         Controller::handleParameters($paramParameters);
+        Controller::initFileSystem();
 
         $methodName = ($paramAction ?? Controller::getAction()) . 'Action';
         $ctlName    = $paramCtrl ?? Controller::getController();
@@ -176,13 +198,24 @@ class Controller
 
 
         if (method_exists($targetCtl, $methodName)) {
-            return $targetCtl->$methodName();
+                $targetCtl->_beforeAction();
+                $targetCtl->$methodName();
+                $targetCtl->_afterAction();
+                return 0;
         }
         else {
             return Controller::getInstance('static')->notFoundAction();
         }
 
         Controller::error("If you have reached this point, there is a problem with the provided couple controller/action.", E_USER_ERROR);
+    }
+
+    /**
+     * Init File System Management
+     */
+    private static function initFileSystem()
+    {
+        static::$_fileSystemReflection = Factory::getFS();
     }
 
     /**
@@ -304,6 +337,15 @@ class Controller
     public static function isDevMode()
     {
         return (int)Conf::getValue('app/dev') === 1;
+    }
+
+    /**
+     * Returns file system manager
+     * @return FS
+     */
+    public static function getFS()
+    {
+        return static::$_fileSystemReflection;
     }
 
 
