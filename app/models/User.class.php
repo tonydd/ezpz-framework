@@ -14,7 +14,7 @@ class User extends Model
     protected $mail;
     protected $pwd;
     protected $token;
-    protected $tokenExpiration;
+    protected $token_expiration;
     protected $admin;
 
     /**

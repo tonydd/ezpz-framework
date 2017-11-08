@@ -65,4 +65,28 @@ class StaticController extends Controller
     {
         $this->getRenderer()->setTemplate('recettes/index');
     }
+
+    /**
+     * Get rendered HTML Code for a view
+     */
+    public function templateAction()
+    {
+        $this->setheader('Content-Type', 'text/html');
+        $tpl = $this->getParameter('tpl') ?? 'index';
+        $renderer = $this->getRenderer();
+
+        if ($this->hasParameter('tpl-data')) {
+            $tplData = $this->getParameter('tpl-data');
+            if (is_array($tplData)) {
+                foreach ($tplData as $key => $value) {
+                    $renderer->assign($key,$value);
+                }
+            }
+            else {
+                $renderer->assign('param', $tplData);
+            }
+        }
+
+        $renderer->_include($tpl, true);
+    }
 }

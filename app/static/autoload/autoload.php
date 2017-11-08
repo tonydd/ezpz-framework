@@ -6,7 +6,9 @@
  * Time: 18:42
  */
 
-function __autoload($className) {
+spl_autoload_register('ez_autoload');
+
+function ez_autoload($className) {
 
     $fileName = "$className.class.php";
 
@@ -47,3 +49,7 @@ function load_classphp($directory, $target) {
 
     return false;
 }
+
+
+// -- Always loaded files
+//require_once '../func/func.php';

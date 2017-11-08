@@ -8,11 +8,20 @@
 
 class DefaultFileSystem implements FS
 {
+    /**
+     * @param string $path
+     * @return bool
+     */
     public function file_exists(string $path)
     {
         return file_exists($path);
     }
 
+    /**
+     * @param string $dir
+     * @param bool $keepParents
+     * @return array
+     */
     public function scandir(string $dir, bool $keepParents = false)
     {
         $scan = scandir($dir);
@@ -22,6 +31,10 @@ class DefaultFileSystem implements FS
         return $scan;
     }
 
+    /**
+     * @param string $dir
+     * @return bool
+     */
     public function is_dir(string $dir)
     {
         return is_dir($dir);

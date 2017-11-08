@@ -17,11 +17,12 @@
 
     <input type="hidden" value="null" name="token" id="token" />
 
-    <?php if ($data['url'] !== null) : ?>
+    <?php if (isset($data['url']) && $data['url'] !== null) : ?>
     <input type="hidden" name="url" value="<?php echo $data['url'];?>" />
     <?php endif;?>
 
     <div class="form-group">
-        <button type="submit" class="btn btn-primary">Connexion</button>
+        <button type="submit" class="btn btn-success">Connexion</button>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#form_register">Créer un compte</button>
     </div>
 </form>

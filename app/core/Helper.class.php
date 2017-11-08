@@ -56,4 +56,8 @@ class Helper
         return $array[count($array) - 1];
     }
 
+    public static function getRenderedBlock($controller, $action)
+    {
+
+    }
 }

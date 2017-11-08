@@ -14,6 +14,8 @@ class Registry
 
     private $_cache;
 
+    private static $_registry = [];
+
     private static $_instance;
 
     public function __construct()
@@ -22,8 +24,12 @@ class Registry
         $this->_cache = Factory::getCache();
     }
 
-    public function register($key, $value, $temporary = false)
+    public function register($key, $value, $temporary = true)
     {
+        if ($temporary) {
+            self::$_registry[$key] = $value;
+        }
+
         $prev = $this->_getValue($key);
         $exists = $prev !== null && !empty($prev);
 
@@ -56,6 +62,10 @@ class Registry
     }
 
     public function getValue($key) {
+        if (isset(self::$_registry[$key])) {
+            return self::$_registry[$key];
+        }
+
         if (($val = $this->_cache->getValue($key)) !== null) {
             return $val;
         }

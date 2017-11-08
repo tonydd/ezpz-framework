@@ -94,6 +94,16 @@ class LoginController extends Controller
         $this->redirect('index');
     }
 
+    public function registerAction()
+    {
+        $user = new User();
+        $user->setData($this->getParameters());
+        $user->save();
+
+        $this->getRenderer()->addMessage("Votre compte à bien été crée !", Renderer::INFO_MESSAGE);
+        $this->redirect('index');
+    }
+
     public function accountAction()
     {
         if (!$this->isLogged()) {

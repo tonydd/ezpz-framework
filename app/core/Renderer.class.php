@@ -517,7 +517,7 @@ class Renderer
      * Include a (sub)view
      * @param string $view
      */
-    private function _include($view, $passData = false)
+    public function _include($view, $passData = false)
     {
         try {
             if (!($path = $this->findView($view))) {
@@ -526,6 +526,7 @@ class Renderer
 
             if (file_exists($path)) {
                 if ($passData) {
+                    // -- $data is the variable accessible from included view
                     $data = $this->parameters;
                 }
                 include $path;
@@ -535,5 +536,23 @@ class Renderer
         } catch (Exception $e) {
             Controller::error($e->__toString());
         }
+    }
+
+    /**
+     * @param $template
+     * @return string
+     */
+    private function _includeInModal($template, $modalTitle, $modalDomId = null)
+    {
+        if ($modalDomId === null) {
+            $modalDomId = basename($template);
+        }
+
+        // -- Temporary Renderer, gets its own data to generate the modal HTML code
+        Factory::getRenderer()
+            ->assign('modal-include', $template)
+            ->assign('modal-title', $modalTitle)
+            ->assign('modal-id', $modalDomId)
+            ->_include('util/modal', true);
     }
 }

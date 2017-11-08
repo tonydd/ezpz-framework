@@ -70,6 +70,15 @@ class Controller
     }
 
     /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasParameter(string $name)
+    {
+        return $this->getParameter($name) !== null;
+    }
+
+    /**
      * @return Renderer
      */
     public function getRenderer()

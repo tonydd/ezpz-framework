@@ -2,3 +2,4 @@
 /.idea/
 /conf.ini
 /cache/
+/debug.php
